@@ -148,19 +148,21 @@ export default function HomePage() {
         }));
 
       setMessages((prevMessages) => [...prevMessages, ...modelResponses]);
-    } catch (error: any) {
-      console.error("Error sending message:", error.message);
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          role: "model",
-          parts: [
-            {
-              text: `メッセージの送信中にエラーが発生しました: ${error.message}`,
-            },
-          ],
-        },
-      ]);
+    } catch (error: unknown) {
+      if (error) {
+        // console.error("Error sending message:", error.message);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          {
+            role: "model",
+            parts: [
+              {
+                text: `メッセージの送信中にエラーが発生しました: ${error}`,
+              },
+            ],
+          },
+        ]);
+      }
     } finally {
       setIsLoading(false); // ロード状態を終了
     }
