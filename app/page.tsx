@@ -159,20 +159,38 @@ export default function HomePage() {
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
     >
-      {/* ヘッダー部分 */}
-      <h1
+      <header
         style={{
-          textAlign: "center",
-          padding: "15px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "15px 20px",
           background: "#4CAF50",
-          color: "white",
-          margin: 0,
-          fontSize: "1.5rem",
           borderBottom: "1px solid #ddd",
         }}
       >
-        海王祭プランニングAI
-      </h1>
+        {/* 左：タイトル */}
+        <h1
+          style={{
+            color: "white",
+            margin: 0,
+            fontSize: "1.5rem",
+          }}
+        >
+          海王祭プランニングAI
+        </h1>
+
+        {/* 右：セッションID */}
+        <span
+          style={{
+            color: "rgba(255,255,255,0.8)",
+            fontSize: "0.9rem",
+            fontFamily: "monospace",
+          }}
+        >
+          セッションID: {sessionIdRef.current /* または sessionId */}
+        </span>
+      </header>
 
       {/* チャットメッセージ表示エリア */}
       <div
