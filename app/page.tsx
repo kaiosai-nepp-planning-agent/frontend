@@ -4,7 +4,7 @@ import React, { useState, FormEvent, useEffect, useRef } from "react";
 
 // APIのベースURLを、Next.jsのプロキシAPIのパスに変更
 // App Routerでは、URLのベースはアプリケーションのルートになるので、相対パスでOK
-const API_BASE_URL = ""; // または '/' でも動作します
+const API_BASE_URL = "/api/proxy"; // または '/' でも動作します
 const USER_ID = "u_123";
 
 interface MessagePart {
@@ -30,9 +30,8 @@ export default function HomePage() {
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const url = `${API_BASE_URL}/api/proxy`;
   async function initializeSession(sessionId: string) {
-    await fetch(url, {
+    await fetch(API_BASE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -70,12 +69,8 @@ export default function HomePage() {
     const sessionId = crypto.randomUUID();
     await initializeSession(sessionId); // セッションの初期化を呼び出し
 
-    // プロキシAPIのURL
-    const url = `${API_BASE_URL}/api/proxy`;
-    console.log("Sending message via proxy URL:", url);
-
     try {
-      const response = await fetch(url, {
+      const response = await fetch(API_BASE_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
