@@ -49,8 +49,7 @@ export default function HomePage() {
     if (!sid) {
       sid = crypto.randomUUID();
       setCookie("session_id", sid, 7); // 有効期間7日
-      sessionIdRef.current = sid;
-      initializeSession();
+      initializeSession(sid);
     }
     sessionIdRef.current = sid; // セッションIDを保持
   }, []);
@@ -64,14 +63,14 @@ export default function HomePage() {
     }
   }, [messages]); // メッセージが更新されるたびに実行
 
-  async function initializeSession() {
+  async function initializeSession(sessionId: string) {
     await fetch("/api/proxy", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         type: "initializeSession",
         userId: USER_ID,
-        sessionId: sessionIdRef.current,
+        sessionId: sessionId,
       }),
     });
   }
