@@ -24,26 +24,36 @@ interface ApiResponseEvent {
   error?: string; // プロキシからのエラーメッセージも考慮
 }
 
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+function setCookie(name: string, value: string, days = 7) {
+  const exp = new Date();
+  exp.setTime(exp.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )};expires=${exp.toUTCString()};path=/`;
+}
+
 export default function HomePage() {
   // コンポーネント名をHomePageなどに変更
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  async function initializeSession(sessionId: string) {
-    await fetch(API_BASE_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      // リクエストボディに 'type: initializeSession' を追加し、ユーザーIDとセッションIDを渡す
-      body: JSON.stringify({
-        type: "initializeSession",
-        userId: USER_ID,
-        sessionId: sessionId,
-      }),
-    });
-  }
+
+  const sessionIdRef = useRef<string>("");
+  useEffect(() => {
+    let sid = getCookie("session_id");
+    if (!sid) {
+      sid = crypto.randomUUID();
+      setCookie("session_id", sid, 7); // 有効期間7日
+      sessionIdRef.current = sid;
+      initializeSession();
+    }
+    sessionIdRef.current = sid; // セッションIDを保持
+  }, []);
 
   /**
    * メッセージリストの最下部にスクロールする処理
@@ -53,6 +63,18 @@ export default function HomePage() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]); // メッセージが更新されるたびに実行
+
+  async function initializeSession() {
+    await fetch("/api/proxy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "initializeSession",
+        userId: USER_ID,
+        sessionId: sessionIdRef.current,
+      }),
+    });
+  }
 
   /**
    * フォーム送信時の処理
@@ -66,8 +88,6 @@ export default function HomePage() {
     setMessages((prevMessages) => [...prevMessages, userMessage]); // ユーザーメッセージをUIに追加
     setInput(""); // 入力フィールドをクリア
     setIsLoading(true); // ロード状態を開始
-    const sessionId = crypto.randomUUID();
-    await initializeSession(sessionId); // セッションの初期化を呼び出し
 
     try {
       const response = await fetch(API_BASE_URL, {
@@ -80,7 +100,7 @@ export default function HomePage() {
           type: "sendMessage", // プロキシAPIが処理を識別するためのタイプ
           app_name: "planning_agent",
           user_id: USER_ID,
-          session_id: sessionId,
+          session_id: sessionIdRef.current,
           new_message: userMessage,
         }),
       });
