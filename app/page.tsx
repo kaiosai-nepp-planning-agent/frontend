@@ -4,9 +4,8 @@ import React, { useState, FormEvent, useEffect, useRef } from "react";
 
 // APIのベースURLを、Next.jsのプロキシAPIのパスに変更
 // App Routerでは、URLのベースはアプリケーションのルートになるので、相対パスでOK
-const API_BASE_URL = ""; // または '/' でも動作します
+const API_BASE_URL = "/api/proxy"; // または '/' でも動作します
 const USER_ID = "u_123";
-const SESSION_ID = "s_123";
 
 interface MessagePart {
   text: string;
@@ -25,6 +24,18 @@ interface ApiResponseEvent {
   error?: string; // プロキシからのエラーメッセージも考慮
 }
 
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+function setCookie(name: string, value: string, days = 7) {
+  const exp = new Date();
+  exp.setTime(exp.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )};expires=${exp.toUTCString()};path=/`;
+}
+
 export default function HomePage() {
   // コンポーネント名をHomePageなどに変更
   const [messages, setMessages] = useState<Message[]>([]);
@@ -32,58 +43,16 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * 初回ロード時にセッションを初期化する非同期関数
-   * プロキシAPIの /api/proxy エンドポイントを叩き、セッション作成を要求します。
-   */
-  // useEffect(() => {
-  // const initializeSession = async () => {
-  // // プロキシAPIのURL
-  // const url = `${API_BASE_URL}/api/proxy`;
-  // console.log("Initializing session via proxy URL:", url);
-
-  // try {
-  //   const response = await fetch(url, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     // リクエストボディに 'type: initializeSession' を追加し、ユーザーIDとセッションIDを渡す
-  //     body: JSON.stringify({
-  //       type: "initializeSession",
-  //       userId: USER_ID,
-  //       sessionId: SESSION_ID,
-  //     }),
-  //   });
-
-  //   if (!response.ok) {
-  //     const errorData = await response
-  //       .json()
-  //       .catch(() => ({
-  //         error: "Unknown error during session initialization.",
-  //       }));
-  //     throw new Error(
-  //       errorData.error || `API error: ${response.statusText}`
-  //     );
-  //   }
-
-  //   console.log("Session initialized or already exists.");
-  //   // 必要であれば、APIからの初期メッセージなどを処理することも可能
-  //     } catch (error: any) {
-  //       console.error("Error initializing session:", error.message);
-  //       setMessages((prevMessages) => [
-  //         ...prevMessages,
-  //         {
-  //           role: "model",
-  //           parts: [
-  //             { text: `セッションの初期化に失敗しました: ${error.message}` },
-  //           ],
-  //         },
-  //       ]);
-  //     }
-  //   };
-  //   initializeSession();
-  // }, []); // 空の依存配列でコンポーネントマウント時に一度だけ実行
+  const sessionIdRef = useRef<string>("");
+  useEffect(() => {
+    let sid = getCookie("session_id");
+    if (!sid) {
+      sid = crypto.randomUUID();
+      setCookie("session_id", sid, 7); // 有効期間7日
+      initializeSession(sid);
+    }
+    sessionIdRef.current = sid; // セッションIDを保持
+  }, []);
 
   /**
    * メッセージリストの最下部にスクロールする処理
@@ -93,6 +62,18 @@ export default function HomePage() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]); // メッセージが更新されるたびに実行
+
+  async function initializeSession(sessionId: string) {
+    await fetch("/api/proxy", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "initializeSession",
+        userId: USER_ID,
+        sessionId: sessionId,
+      }),
+    });
+  }
 
   /**
    * フォーム送信時の処理
@@ -107,12 +88,8 @@ export default function HomePage() {
     setInput(""); // 入力フィールドをクリア
     setIsLoading(true); // ロード状態を開始
 
-    // プロキシAPIのURL
-    const url = `${API_BASE_URL}/api/proxy`;
-    console.log("Sending message via proxy URL:", url);
-
     try {
-      const response = await fetch(url, {
+      const response = await fetch(API_BASE_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +99,7 @@ export default function HomePage() {
           type: "sendMessage", // プロキシAPIが処理を識別するためのタイプ
           app_name: "planning_agent",
           user_id: USER_ID,
-          session_id: SESSION_ID,
+          session_id: sessionIdRef.current,
           new_message: userMessage,
         }),
       });
@@ -182,20 +159,38 @@ export default function HomePage() {
         boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
       }}
     >
-      {/* ヘッダー部分 */}
-      <h1
+      <header
         style={{
-          textAlign: "center",
-          padding: "15px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "15px 20px",
           background: "#4CAF50",
-          color: "white",
-          margin: 0,
-          fontSize: "1.5rem",
           borderBottom: "1px solid #ddd",
         }}
       >
-        海王祭プランニングAI
-      </h1>
+        {/* 左：タイトル */}
+        <h1
+          style={{
+            color: "white",
+            margin: 0,
+            fontSize: "1.5rem",
+          }}
+        >
+          海王祭プランニングAI
+        </h1>
+
+        {/* 右：セッションID */}
+        <span
+          style={{
+            color: "rgba(255,255,255,0.8)",
+            fontSize: "0.9rem",
+            fontFamily: "monospace",
+          }}
+        >
+          セッションID: {sessionIdRef.current /* または sessionId */}
+        </span>
+      </header>
 
       {/* チャットメッセージ表示エリア */}
       <div
@@ -275,6 +270,7 @@ export default function HomePage() {
             borderRadius: "25px",
             marginRight: "10px",
             fontSize: "1rem",
+            color: "#333",
           }}
           disabled={isLoading} // ロード中は入力不可
         />
