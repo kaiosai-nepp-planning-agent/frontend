@@ -6,7 +6,6 @@ import React, { useState, FormEvent, useEffect, useRef } from "react";
 // App Routerでは、URLのベースはアプリケーションのルートになるので、相対パスでOK
 const API_BASE_URL = ""; // または '/' でも動作します
 const USER_ID = "u_123";
-const SESSION_ID = "s_123";
 
 interface MessagePart {
   text: string;
@@ -31,59 +30,21 @@ export default function HomePage() {
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * 初回ロード時にセッションを初期化する非同期関数
-   * プロキシAPIの /api/proxy エンドポイントを叩き、セッション作成を要求します。
-   */
-  // useEffect(() => {
-  // const initializeSession = async () => {
-  // // プロキシAPIのURL
-  // const url = `${API_BASE_URL}/api/proxy`;
-  // console.log("Initializing session via proxy URL:", url);
-
-  // try {
-  //   const response = await fetch(url, {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     // リクエストボディに 'type: initializeSession' を追加し、ユーザーIDとセッションIDを渡す
-  //     body: JSON.stringify({
-  //       type: "initializeSession",
-  //       userId: USER_ID,
-  //       sessionId: SESSION_ID,
-  //     }),
-  //   });
-
-  //   if (!response.ok) {
-  //     const errorData = await response
-  //       .json()
-  //       .catch(() => ({
-  //         error: "Unknown error during session initialization.",
-  //       }));
-  //     throw new Error(
-  //       errorData.error || `API error: ${response.statusText}`
-  //     );
-  //   }
-
-  //   console.log("Session initialized or already exists.");
-  //   // 必要であれば、APIからの初期メッセージなどを処理することも可能
-  //     } catch (error: any) {
-  //       console.error("Error initializing session:", error.message);
-  //       setMessages((prevMessages) => [
-  //         ...prevMessages,
-  //         {
-  //           role: "model",
-  //           parts: [
-  //             { text: `セッションの初期化に失敗しました: ${error.message}` },
-  //           ],
-  //         },
-  //       ]);
-  //     }
-  //   };
-  //   initializeSession();
-  // }, []); // 空の依存配列でコンポーネントマウント時に一度だけ実行
+  const url = `${API_BASE_URL}/api/proxy`;
+  async function initializeSession(sessionId: string) {
+    await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // リクエストボディに 'type: initializeSession' を追加し、ユーザーIDとセッションIDを渡す
+      body: JSON.stringify({
+        type: "initializeSession",
+        userId: USER_ID,
+        sessionId: sessionId,
+      }),
+    });
+  }
 
   /**
    * メッセージリストの最下部にスクロールする処理
@@ -106,6 +67,8 @@ export default function HomePage() {
     setMessages((prevMessages) => [...prevMessages, userMessage]); // ユーザーメッセージをUIに追加
     setInput(""); // 入力フィールドをクリア
     setIsLoading(true); // ロード状態を開始
+    const sessionId = crypto.randomUUID();
+    await initializeSession(sessionId); // セッションの初期化を呼び出し
 
     // プロキシAPIのURL
     const url = `${API_BASE_URL}/api/proxy`;
@@ -122,7 +85,7 @@ export default function HomePage() {
           type: "sendMessage", // プロキシAPIが処理を識別するためのタイプ
           app_name: "planning_agent",
           user_id: USER_ID,
-          session_id: SESSION_ID,
+          session_id: sessionId,
           new_message: userMessage,
         }),
       });
@@ -275,6 +238,7 @@ export default function HomePage() {
             borderRadius: "25px",
             marginRight: "10px",
             fontSize: "1rem",
+            color: "#333",
           }}
           disabled={isLoading} // ロード中は入力不可
         />
