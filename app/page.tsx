@@ -1,6 +1,7 @@
 "use client"; // App Routerのクライアントコンポーネントであることを宣言
 
 import React, { useState, FormEvent, useEffect, useRef } from "react";
+import Image from "next/image";
 import MarkdownRenderer from "../components/MarkdownRenderer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -177,8 +178,10 @@ export default function HomePage() {
       >
         <div className="flex flex-row">
           {/* 左：タイトル */}
-          <img
-            src="hero.png" // ここはあなたの画像のパスです
+          <Image
+            width={24}
+            height={24}
+            src="/hero.png" // ここはあなたの画像のパスです
             alt="logo"
             className="w-8 h-8 z-50"
           />
@@ -196,7 +199,7 @@ export default function HomePage() {
               fontFamily: "monospace",
             }}
           >
-            ID: {sessionIdRef.current /* または sessionId */}
+            ID:{sessionIdRef.current /* または sessionId */}
           </span>
           <a
             href="https://github.com/kaiosai-nepp-planning-agent"
@@ -205,7 +208,7 @@ export default function HomePage() {
             style={{ color: "black" }} // アイコンの色をタイトルと同じにする
             aria-label="GitHub Repository" // アクセシビリティのため
           >
-            <FaGithub size={24} />
+            <FaGithub size={24} className="pl-2" />
           </a>
         </div>
       </header>
