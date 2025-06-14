@@ -1,6 +1,7 @@
 "use client"; // App Routerのクライアントコンポーネントであることを宣言
 
 import React, { useState, FormEvent, useEffect, useRef } from "react";
+import MarkdownRenderer from "../components/MarkdownRenderer"; // Import the new component
 
 // APIのベースURLを、Next.jsのプロキシAPIのパスに変更
 // App Routerでは、URLのベースはアプリケーションのルートになるので、相対パスでOK
@@ -209,7 +210,7 @@ export default function HomePage() {
               textAlign: msg.role === "user" ? "right" : "left",
             }}
           >
-            <span
+            {/* <span
               style={{
                 display: "inline-block",
                 padding: "10px 15px",
@@ -224,6 +225,30 @@ export default function HomePage() {
               {msg.parts.map((part, pIdx) => (
                 <React.Fragment key={pIdx}>{part.text}</React.Fragment>
               ))}
+            </span> */}
+            <span
+              style={{
+                display: "inline-block",
+                padding: "10px 15px",
+                borderRadius: "20px",
+                backgroundColor: msg.role === "user" ? "#E0F2F7" : "#FFFFFF",
+                color: "#333",
+                wordBreak: "break-word",
+                maxWidth: "80%",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+              }}
+            >
+              {msg.role === "model" ? (
+                // Use MarkdownRenderer for model messages
+                <MarkdownRenderer
+                  content={msg.parts.map((p) => p.text).join("")}
+                />
+              ) : (
+                // Display user messages as plain text
+                msg.parts.map((part, pIdx) => (
+                  <React.Fragment key={pIdx}>{part.text}</React.Fragment>
+                ))
+              )}
             </span>
           </div>
         ))}
