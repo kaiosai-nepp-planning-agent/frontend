@@ -1,7 +1,11 @@
 "use client"; // App Routerのクライアントコンポーネントであることを宣言
 
 import React, { useState, FormEvent, useEffect, useRef } from "react";
-import MarkdownRenderer from "../components/MarkdownRenderer"; // Import the new component
+import MarkdownRenderer from "../components/MarkdownRenderer";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { FaGithub } from "react-icons/fa";
 
 // APIのベースURLを、Next.jsのプロキシAPIのパスに変更
 // App Routerでは、URLのベースはアプリケーションのルートになるので、相対パスでOK
@@ -166,34 +170,48 @@ export default function HomePage() {
           justifyContent: "space-between",
           alignItems: "center",
           padding: "15px 20px",
-          background: "#4CAF50",
+          // background: "#4CAF50",
           borderBottom: "1px solid #ddd",
         }}
+        className="bg-neutral-300"
       >
-        {/* 左：タイトル */}
-        <h1
-          style={{
-            color: "white",
-            margin: 0,
-            fontSize: "1.5rem",
-          }}
-        >
-          海王祭プランニングAI
-        </h1>
+        <div className="flex flex-row">
+          {/* 左：タイトル */}
+          <img
+            src="hero.png" // ここはあなたの画像のパスです
+            alt="logo"
+            className="w-8 h-8 z-50"
+          />
 
+          <h1 className="text-black text-2xl pl-2">海王祭chatBot</h1>
+        </div>
         {/* 右：セッションID */}
-        <span
-          style={{
-            color: "rgba(255,255,255,0.8)",
-            fontSize: "0.9rem",
-            fontFamily: "monospace",
-          }}
-        >
-          セッションID: {sessionIdRef.current /* または sessionId */}
-        </span>
+
+        <div className="flex flex-row">
+          <span
+            className="hidden sm:inline"
+            style={{
+              color: "rgba(255,255,255,0.8)",
+              fontSize: "0.9rem",
+              fontFamily: "monospace",
+            }}
+          >
+            ID: {sessionIdRef.current /* または sessionId */}
+          </span>
+          <a
+            href="https://github.com/kaiosai-nepp-planning-agent"
+            target="_blank" // 新しいタブで開く
+            rel="noopener noreferrer" // セキュリティのため
+            style={{ color: "black" }} // アイコンの色をタイトルと同じにする
+            aria-label="GitHub Repository" // アクセシビリティのため
+          >
+            <FaGithub size={24} />
+          </a>
+        </div>
       </header>
 
       {/* チャットメッセージ表示エリア */}
+
       <div
         style={{
           flexGrow: 1,
@@ -210,32 +228,17 @@ export default function HomePage() {
               textAlign: msg.role === "user" ? "right" : "left",
             }}
           >
-            {/* <span
+            <Card
+              className="rounded-md"
               style={{
                 display: "inline-block",
                 padding: "10px 15px",
-                borderRadius: "20px",
-                backgroundColor: msg.role === "user" ? "#E0F2F7" : "#FFFFFF",
-                color: "#333",
+                // borderRadius: "20px",
+                backgroundColor: msg.role === "user" ? "#F0F0F0" : "#FFFFFF",
+                // color: "#333",
                 wordBreak: "break-word",
                 maxWidth: "80%",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              }}
-            >
-              {msg.parts.map((part, pIdx) => (
-                <React.Fragment key={pIdx}>{part.text}</React.Fragment>
-              ))}
-            </span> */}
-            <span
-              style={{
-                display: "inline-block",
-                padding: "10px 15px",
-                borderRadius: "20px",
-                backgroundColor: msg.role === "user" ? "#E0F2F7" : "#FFFFFF",
-                color: "#333",
-                wordBreak: "break-word",
-                maxWidth: "80%",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                // boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
               {msg.role === "model" ? (
@@ -249,23 +252,24 @@ export default function HomePage() {
                   <React.Fragment key={pIdx}>{part.text}</React.Fragment>
                 ))
               )}
-            </span>
+            </Card>
           </div>
         ))}
         {/* AIの入力中インジケーター */}
         {isLoading && (
           <div style={{ textAlign: "left", marginBottom: "15px" }}>
             <span
+              className="rounded-md"
               style={{
                 display: "inline-block",
                 padding: "10px 15px",
-                borderRadius: "20px",
+                // borderRadius: "20px",
                 backgroundColor: "#FFFFFF",
                 color: "#333",
                 boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
               }}
             >
-              AIが入力中...
+              入力中...
             </span>
           </div>
         )}
@@ -283,40 +287,24 @@ export default function HomePage() {
           alignItems: "center",
         }}
       >
-        <input
+        <Input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="メッセージを入力してください..."
-          style={{
-            flexGrow: 1,
-            padding: "10px",
-            border: "1px solid #CCC",
-            borderRadius: "25px",
-            marginRight: "10px",
-            fontSize: "1rem",
-            color: "#333",
-          }}
+          placeholder="海王祭aiに聞く..."
+          className="flex-grow mr-4 text-base text-gray-700 rounded-md border border-gray-300 p-2"
           disabled={isLoading} // ロード中は入力不可
         />
-        <button
+        <Button
           type="submit"
-          style={{
-            padding: "10px 20px",
-            background: "#2196F3",
-            color: "white",
-            border: "none",
-            borderRadius: "25px",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "bold",
-            transition: "background-color 0.3s ease",
-          }}
           disabled={isLoading} // ロード中は送信不可
         >
           送信
-        </button>
+        </Button>
       </form>
+      <footer className="bg-neutral-300 text-black text-center py-3 border-t border-gray-300">
+        <p className="text-sm">© 2025 All rights reserved</p>
+      </footer>
     </div>
   );
 }
