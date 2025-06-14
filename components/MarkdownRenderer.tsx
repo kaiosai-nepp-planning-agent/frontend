@@ -1,4 +1,3 @@
-// components/MarkdownRenderer.tsx
 import React from "react";
 import ReactMarkdown, { Components } from "react-markdown"; // Components 型をインポート
 import remarkGfm from "remark-gfm";
@@ -10,9 +9,8 @@ interface MarkdownRendererProps {
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   // カスタムコンポーネントを正しい型で定義します
   const customComponents: Components = {
-    code: ({ node, className, children, ...props }) => {
+    code: ({ className, children, ...props }) => {
       const isBlock = className && className.startsWith("language-");
-
       const match = /language-(\w+)/.exec(className || "");
 
       return isBlock && match ? (
@@ -30,7 +28,6 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
           </code>
         </pre>
       ) : (
-        // これはインラインコード、または特定の言語クラスを持たないコードブロックにレンダリングされます
         <code
           style={{
             backgroundColor: "#f0f0f0",
@@ -43,20 +40,20 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         </code>
       );
     },
-    // ... その他のカスタムコンポーネントはそのまま
-    h1: ({ node, ...props }) => (
+    // ここから下のコンポーネントでは 'node' が使われていないため、分割代入から削除します
+    h1: ({ ...props }) => (
       <h1 style={{ fontSize: "2em", marginBottom: "0.5em" }} {...props} />
     ),
-    h2: ({ node, ...props }) => (
+    h2: ({ ...props }) => (
       <h2 style={{ fontSize: "1.5em", marginBottom: "0.5em" }} {...props} />
     ),
-    p: ({ node, ...props }) => (
+    p: ({ ...props }) => (
       <p style={{ lineHeight: "1.6", marginBottom: "1em" }} {...props} />
     ),
-    a: ({ node, ...props }) => (
+    a: ({ ...props }) => (
       <a style={{ color: "#1a73e8", textDecoration: "underline" }} {...props} />
     ),
-    ul: ({ node, ...props }) => (
+    ul: ({ ...props }) => (
       <ul
         style={{
           listStyleType: "disc",
@@ -66,7 +63,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         {...props}
       />
     ),
-    ol: ({ node, ...props }) => (
+    ol: ({ ...props }) => (
       <ol
         style={{
           listStyleType: "decimal",
@@ -76,10 +73,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         {...props}
       />
     ),
-    li: ({ node, ...props }) => (
-      <li style={{ marginBottom: "0.5em" }} {...props} />
-    ),
-    table: ({ node, ...props }) => (
+    li: ({ ...props }) => <li style={{ marginBottom: "0.5em" }} {...props} />,
+    table: ({ ...props }) => (
       <table
         style={{
           borderCollapse: "collapse",
@@ -89,7 +84,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         {...props}
       />
     ),
-    th: ({ node, ...props }) => (
+    th: ({ ...props }) => (
       <th
         style={{
           border: "1px solid #ddd",
@@ -100,13 +95,13 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
         {...props}
       />
     ),
-    td: ({ node, ...props }) => (
+    td: ({ ...props }) => (
       <td
         style={{ border: "1px solid #ddd", padding: "8px", textAlign: "left" }}
         {...props}
       />
     ),
-    blockquote: ({ node, ...props }) => (
+    blockquote: ({ ...props }) => (
       <blockquote
         style={{
           borderLeft: "4px solid #ccc",
@@ -121,10 +116,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
   };
 
   return (
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={customComponents} // 定義した customComponents オブジェクトを使用
-    >
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={customComponents}>
       {content}
     </ReactMarkdown>
   );
